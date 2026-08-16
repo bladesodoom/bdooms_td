@@ -1,0 +1,457 @@
+---------------------------------------------------------------------------------------------------
+Version: 0.19.1
+Date: 08. 08. 2026
+  Bugfixes:
+    - Fixed starting ore patches ignoring the map's "resource size" and
+      "resource richness" generation settings. resource_manager.lua was
+      reading them from surface.map_gen_settings.autoplace_settings
+      .resource.settings, which holds per-entity autoplace-expression
+      overrides and is essentially always empty; the actual size/richness
+      sliders from the map generator screen live in
+      surface.map_gen_settings.autoplace_controls instead. Every starting
+      patch was silently using the default x1 multiplier regardless of the
+      chosen map settings.
+---------------------------------------------------------------------------------------------------
+Version: 0.19.0
+Date: 08. 08. 2026
+  Features:
+    - Starting resources: scripts/resource_manager.lua scatters a small ore
+      patch of each base resource (iron, copper, coal, stone, uranium) plus
+      one crude-oil well near the player's spawn point at game start. Each
+      patch is grown via a random-walk "blob" so it reads as an organic,
+      irregular deposit rather than a circle. Patches are placed outward
+      from spawn on expanding rings at random angles with clearance checks
+      against the spawn area, the Core, and every other patch/well, so
+      nothing overlaps. Tile count (size) and per-tile amount (richness)
+      are scaled by the map's vanilla "resource size"/"resource richness"
+      autoplace settings, read directly from
+      surface.map_gen_settings.autoplace_settings.resource.settings, so a
+      map rolled with bigger/richer resources gets bigger/richer starting
+      patches too. Runs once in on_init, same as the Core spawn.
+---------------------------------------------------------------------------------------------------
+Version: 0.18.0
+Date: 08. 08. 2026
+  Changes:
+    - Essence Research chains reworked to be fully settings-driven instead
+      of a hardcoded 5-tier chain. New startup settings
+      td-initial-essence-cost (default 10) and td-essence-cost-multiplier
+      (default 2) set a geometric cost curve applied to every tier;
+      td-essence-technology-count (default 5) sets the number of tiers per
+      chain; td-science-pack-starting-tier (default 3) sets the first tier
+      that requires a lab instead of being funded directly from Biter
+      Essence, with lab tiers layering on one more vanilla science pack per
+      tier (Automation, Logistic, Military, Chemical, Production, Utility)
+      as they progress - Space Science Pack deliberately excluded since the
+      mod doesn't depend on Space Age. td-essence-bonus-initial (default
+      0.08) and td-essence-bonus-growth (default 1.25) replace the
+      previously hand-maintained per-tier bonus table with a compounding
+      formula. The four cost/tier settings existed already but were unused
+      and missing the mod's td- naming convention; renamed for consistency
+      and to avoid colliding with another mod's settings.
+---------------------------------------------------------------------------------------------------
+Version: 0.17.0
+Date: 08. 08. 2026
+  Features:
+    - Material gating (prototypes/technology/material-gating.lua): every
+      turret and ammo recipe added by this mod is now locked behind the
+      vanilla trigger technology matching its highest-tier raw material -
+      iron-only recipes require steam-power, copper requires electronics,
+      steel requires steel-axe (all three unlock just by crafting plates,
+      no lab needed). Tier is resolved automatically by scanning each
+      recipe's actual ingredients (following one level into intermediates
+      like Explosive Compound) rather than a hand-maintained list.
+    - Essence Research: five independent technology chains, five tiers
+      each - Slow the Assault (time between waves), Thin the Horde (wave
+      size), Weaken Biters (biter health), Sluggish Biters (biter attack
+      speed), and Blunt their Fangs (biter attack damage). Queue any tier
+      from the normal research screen like any other technology. Tiers 1-3
+      cost raw Biter Essence and are paid straight out of players'
+      inventories the moment enough is pooled (no lab involved - Biter
+      Essence isn't a valid lab input). Tiers 4-5 cost Essence Science
+      Packs plus vanilla science packs and research through a normal lab.
+      Each tier is +8%/+8%/+8%/+12%/+15%, applied via
+      scripts/essence_research.lua since none of these map onto a native
+      per-force technology effect.
+    - util.lua: new helper set_area_force (recursively sets the `force`
+      condition on area-type trigger actions).
+  Changes:
+    - Biter Essence is now a "tool"-type item (durability 1) instead of a
+      plain item, so it can be used as a technology cost the same way a
+      science pack is.
+  Bugfixes:
+    - Fixed Mortar Shells (all three tiers) able to kill the player, their
+      turrets, walls, and the Core. Vanilla explosive-cannon-shell splash
+      damage has no force restriction and hits everything in the blast
+      radius; Mortar Shells now use dedicated projectile clones with
+      force = "enemy" set on their area trigger, so splash only ever
+      affects the enemy force. Rapid, Shotgun, and Sniper ammo were
+      checked and don't have this problem - they only ever hit their
+      locked target.
+---------------------------------------------------------------------------------------------------
+Version: 0.16.1
+Date: 08. 08. 2026
+  Bugfixes:
+    - Fixed crash on the first on_nth_tick(60): "LuaForce doesn't contain key evolution_factor". LuaForce.evolution_factor was removed in Factorio 2.0 in favor of the per-surface LuaForce:get_evolution_factor(surface) method (evolution is now tracked per surface for Space Age compatibility). Updated wave_manager.lua's get_evo() to call the new method, passing the Core's surface where available.
+---------------------------------------------------------------------------------------------------
+Version: 0.16.0
+Date: 07. 08. 2026
+  Features:
+    - Projectiles utility (prototypes/utility/projectiles.lua): reusable
+      factory for custom visual projectiles, for use with future custom
+      ammo/items. Projectiles.create() builds a projectile prototype with
+      configurable size (scale), starting speed (Projectiles.set_speed, on
+      the ammo item), and speed-over-time (acceleration field). Three
+      combinable visual options: an image sprite (optionally cloned from a
+      vanilla/earlier projectile via `base`), a point light (size/intensity
+      /color, no image needed), or a solid code-drawn circle (radius/color,
+      no image needed).
+    - shared/projectile_shapes.lua: static config table read by both the
+      data stage and control stage to back the code-drawn circle option,
+      since the two stages run in separate Lua states with no shared
+      memory. scripts/projectile_visuals.lua listens for the "script"
+      trigger effect fired by Projectiles.enable_shape(ammo_item) and draws
+      the matching circle on the newly spawned projectile; cleanup is
+      automatic since a LuaRenderObject targeting an entity is destroyed by
+      the engine when that entity is.
+---------------------------------------------------------------------------------------------------
+Version: 0.15.0
+Date: 02. 08. 2026
+  Features:
+    - Hive Lord: new boss type (green tint, cloned from behemoth-biter),
+      unlocking once evolution factor reaches 0.4 and picked at random
+      alongside the Swarm Lord on boss waves thereafter. Slower and
+      tankier than the Swarm Lord (55% physical / 35% explosion / 15%
+      laser resistance). Drops a Hive Nest - a tinted biter-spawner clone
+      - 60 seconds after spawning and every 60 seconds thereafter; the
+      nest passively produces biters via vanilla spawner logic until
+      destroyed. Drops 60 Biter Essence on death (Hive Nest drops 15).
+  Changes:
+    - Boss system generalized into a plugin-style registry: each boss
+      type is now a self-contained definition (prototype under
+      prototypes/biters/bosses/, ability logic under scripts/bosses/)
+      registered with boss_manager.lua. Adding a new boss type is just
+      two new files and a require() in each registry, with no changes
+      needed to the shared dispatch/spawn logic in wave_manager.lua.
+    - Swarm Lord's ability logic extracted from boss_manager.lua into its
+      own scripts/bosses/swarm_lord.lua module; behavior unchanged
+      (first pulse 5 seconds after spawn, then every 5 seconds, 3
+      clusters of 3 swarm biters per pulse).
+    - Boss wave spawn message now names the specific boss type that
+      appeared (e.g. "*** HIVE LORD ***") instead of always announcing
+      a generic "*** BOSS WAVE ***".
+---------------------------------------------------------------------------------------------------
+Version: 0.14.0
+Date: 02. 08. 2026
+  Features:
+    - Shotgun Turret: very short range (12 tiles), fires a pellet spread per
+      shot. Devastating against biters that get in close; wasted on distant
+      targets. Magenta tint. Cloned from vanilla gun-turret.
+    - Shotgun Shell ammo chain: three tiers cloned from vanilla
+      shotgun-shell/piercing-shotgun-shell (dedicated td-shotgun-shell ammo
+      category). Base Shell, Piercing Shell (higher per-pellet damage), and
+      Buckshot Shell (1.5x pellet count, 0.7x damage - crowd control).
+    - Shotgun Turret research chain: 3 tiers of damage upgrades
+      (+20%/+20%/+30%) and 3 tiers of attack speed upgrades
+      (+25%/+25%/+50%), matching the other turrets' tech pattern.
+    - util.lua: new helper scale_repeat_count (recursively multiplies
+      repeat_count fields, used to widen the Buckshot Shell's pellet burst).
+  Changes:
+    - Reworked shotgun-turret.lua from a standalone CEVO-derived prototype
+      (referencing project_cevo's dragon-projectile and an undefined
+      basic-material item, and never actually wired into data.lua) into a
+      plain vanilla-clone script matching the Rapid/Mortar/Sniper Turret
+      pattern. No longer depends on anything outside base.
+---------------------------------------------------------------------------------------------------
+Version: 0.13.0
+Date: 05. 07. 2026
+  Features:
+    - Boss renamed from Hive Lord (td-boss-biter) to Swarm Lord (td-swarm-lord), hinting at its swarm-spawning ability.
+    - Boss spawn timing reworked: first swarm pulse fires exactly 5 seconds after the Swarm Lord spawns, then every 5 seconds it remains alive. Each boss entity now carries its own next_pulse_tick so timing is exact regardless of when in the wave cycle it spawns.
+    - Boss health scaling: startup setting td-boss-max-health (default 100000) sets the prototype HP cap. Two new runtime settings — td-boss-base-health (default 3000) and td-boss-health-growth (default 500) — control the actual health set at spawn. Wave 1 Swarm Lord has base-health HP; each subsequent boss wave adds health-growth. Boss wave count tracked in storage.boss_wave_count.
+---------------------------------------------------------------------------------------------------
+Version: 0.12.0
+Date: 05. 07. 2026
+  Features:
+    - Wave composition now driven by vanilla evolution factor (game.forces.enemy.evolution_factor) rather than wave number. Vanilla biter type selection: small-biter at low evolution, medium (evo 0.2+), big (evo 0.5+), behemoth (evo 0.7+) weighted by evolution. Swarm biter ratio ramps from 0 at evo 0.3 to 50% at max. Tank biter ratio unlocks at evo 0.65, ramps to 15% cap. All wave types (Standard, Rush, Siege) use evolution-based biter selection.
+    - Tank Biter announcement now fires when evolution first crosses 0.65 rather than at a hardcoded wave number.
+---------------------------------------------------------------------------------------------------
+Version: 0.11.0
+Date: 05. 07. 2026
+  Features:
+    - Mod settings via Factorio's settings menu. Startup settings (require restart): Core Max Health (default 2000), Boss Max Health (default 3000), Tank Biter Max Health (default 500). Runtime-global settings (apply immediately): Wave Interval in seconds (default 600), Base Wave Size (default 10), Wave Size Growth per wave (default 5), Boss Wave Interval in waves (default 10), Boss Swarm Clusters per pulse (default 3), Core Aura Radius in tiles (default 48), Core Aura Damage per second (default 1).
+  Bugfixes:
+    - Fixed custom turrets not accepting ammo (0.10.3): AmmoItemPrototype.ammo_category moved to a top-level field in Factorio 2.0; set_ammo_category was writing to the old ammo_type.category location.
+    - Fixed boss waves never spawning (0.10.2): TYPE_BOSS override and dispatch branch were both missing from wave_manager.
+---------------------------------------------------------------------------------------------------
+Version: 0.10.1
+Date: 04. 07. 2026
+  Bugfixes:
+    - Attempt to fix Hive Lord not spawning additional biters.
+      Two root causes: on_nth_tick(180) only fires on fixed tick
+      multiples so bosses spawning between multiples and dying before
+      the next one never triggered the ability at all; and
+      find_non_colliding_position silently returns nil in
+      ungenerated terrain 250 tiles from spawn, dropping every
+      spawn attempt. Fixed by firing the ability immediately on
+      registration, moving subsequent pulses to on_nth_tick(60)
+      (every second), and replacing find_non_colliding_position with
+      direct create_entity calls.
+---------------------------------------------------------------------------------------------------
+Version: 0.10.0
+Date: 04. 07. 2026
+  Features:
+    - Boss wave: every 10th wave spawns the Hive Lord (td-boss-biter)
+      instead of a normal wave. Cloned from behemoth-biter with
+      3000 HP, 50% physical / 40% explosion / 20% laser resistance,
+      magenta tint. Drops 50 Biter Essence on death.
+    - Hive Lord ability: every 3 seconds it spawns 3 swarm biter clusters
+      (9 biters total) around its current position as it walks toward
+      the Core, creating a growing trail of swarmers that overwhelm
+      single-target turrets.
+    - boss_manager.lua: new script module tracking active boss entities
+      and driving the spawn ability. Prunes dead entries automatically
+      each tick so the list never grows unbounded.
+    - Boss wave announces with a distinct *** BOSS WAVE *** message and
+      includes the incoming direction. Bypasses the normal wave type
+      weighting entirely.
+---------------------------------------------------------------------------------------------------
+Version: 0.9.3
+Date: 04. 07. 2026
+  Changes:
+    - Directional wave spawning: Standard, Rush, and Swarm Surge waves
+      now spawn from one randomly chosen direction (N/NE/E/SE/S/SW/W/NW)
+      with a ±22.5° spread so enemies arrive as a broad front rather
+      than a full ring. Siege updated from 4 cardinal to all 8 compass
+      directions. The 5-second warning now includes the incoming
+      direction for non-siege waves.
+---------------------------------------------------------------------------------------------------
+Version: 0.9.2
+Date: 04. 07. 2026
+  Changes:
+    - Biter attack stat config table in biters.lua. All values are
+      multipliers against existing prototype values so Factorio
+      version changes and other mods are handled gracefully.
+      - Vanilla:
+        - small-biter 1.0x cooldown / 1.2x damage;
+        - medium 1.1x / 1.4x; big 1.3x / 1.6x; behemoth 1.5x / 2.0x.
+      - Custom:
+        - swarm biter 0.5x cooldown / 0.3x damage;
+        - tank biter 1.8x cooldown / 4.0x damage (devastating when).
+---------------------------------------------------------------------------------------------------
+Version: 0.9.1
+Date: 29. 06. 2026
+  Changes:
+    - Replaced Core lifesteal passive with a damage aura. Every second
+      the Core pulses, dealing 8 laser damage to all enemy units
+      within 15 tiles. Laser damage type means tank biter
+      resistances apply naturally. A gold circle renders at the aura
+      boundary so the player can always see the range.
+---------------------------------------------------------------------------------------------------
+Version: 0.9.0
+Date: 28. 06. 2026
+  Features:
+    - Core lifesteal passive (replaced in 0.9.1): healed for 25% of
+      damage dealt to biters
+---------------------------------------------------------------------------------------------------
+Version: 0.8.2
+Date: 28. 06. 2026
+  Bugfixes:
+    - Fixed biter tinting and scaling still not applying. Root cause:
+      vanilla biter animations have a layered structure where colour
+      comes from dedicated gray-scale mask layers that already carry
+      tint fields - not from the base body sprite. The generic
+      tint_graphics/scale_graphics functions couldn't find these layers
+      because the body layer uses stripes format (filename and
+      dimensions on different nesting levels). Fix: added
+      Util.tint_biter_animations and Util.scale_biter_animations
+      which directly target layers[N].tint (mask layers only) and
+      layers[N].scale/shift respectively, matching how vanilla itself
+      colours its biters.
+---------------------------------------------------------------------------------------------------
+Version: 0.8.1
+Date: 28. 06. 2026
+  Bugfixes:
+    - Fixed tint_graphics and scale_graphics in util.lua silently
+      skipping biter/unit sprites. Vanilla biter animations use a
+      striped sprite sheet format where the outer animation node has
+      width/height but no filename, and the inner stripe objects have
+      filename but no width/height - the old detection required both on
+      the same node. Also added support for the size field (used by
+      some 2.0 sprites instead of explicit width/height). Both functions
+      now correctly match all three formats: standard
+      (filename+width/height), striped (stripes+width/height), and
+      size-form (filename+size).
+---------------------------------------------------------------------------------------------------
+Version: 0.8.0
+Date: 26. 06. 2026
+  Features:
+    - Tank Biter: cloned from big-biter with 500 HP, 60% physical
+      resistance, 30% explosion resistance, and very slow movement
+      (0.08 vs vanilla's 0.15). Dark red tint. Rapid Turrets are
+      nearly useless against it; Sniper AP rounds are the efficient
+      counter. Drops 6 Biter Essence per kill.
+    - Tank Biters introduced in Standard waves from wave 8, ramping to
+      a maximum 15% of wave composition over 10 waves.
+    - One-time announcement fires at wave 8 warning players about Tank
+      Biters and recommending Sniper AP rounds.
+  Changes:
+    - Swarm Biter graphics now scaled to 0.6x to visually match their
+      smaller collision box. Previously the sprites were full
+      small-biter size despite the hit-box being half as large,
+      making them indistinguishable from regular biters in the field.
+---------------------------------------------------------------------------------------------------
+Version: 0.7.1
+Date: 26. 06. 2026
+  Changes:
+    - Wave types now unlock gradually via a phase system rather than
+      being immediately available. Standard-only for waves 1-5, Rush
+      joins at wave 6, Siege at 11, Swarm Surge at 16. Equal weights
+      for all types from wave 21.
+    - Weighted random selection: newly introduced wave types start with
+      lower weight (1) vs established types (2-3).
+    - One-time unlock announcements: a chat message fires the first time
+      each new wave type enters the rotation.
+---------------------------------------------------------------------------------------------------
+Version: 0.7.0
+Date: 26. 06. 2026
+  Features:
+    - Wave variety system: four wave types chosen randomly each wave.
+    - Standard Wave: existing mixed composition (swarm ratio ramps up
+      wave 3+).
+    - Rush Wave: 1.5x enemy count, spawns at 120 tiles (vs normal 250)
+      leaving much less reaction time.
+    - Siege Wave: normal enemy count split evenly across N/E/S/W,
+      each group spread ±22.5° so they arrive as broad fronts rather
+      than columns. Forces full perimeter coverage.
+    - Swarm Surge: 3x enemy count, pure swarm biters in tight clusters.
+    - 5-second warning: a chat message announces the incoming wave type
+      and count before enemies spawn.
+---------------------------------------------------------------------------------------------------
+Version: 0.6.1
+Date: 26. 06. 2026
+  Bugfixes:
+    - Added on_player_joined_game handler: players joining or
+      reconnecting mid-game now get the HUD panel immediately rather
+      than waiting up to one second for the next tick cycle. Fixes
+      multiplayer join experience.
+    - Added on_configuration_changed handler: updating the mod mid-save
+      no longer risks nil-field crashes. Missing storage fields (wave,
+      wave_timer, core_unit_number) are initialised to safe defaults
+      and all player HUDs are refreshed on version change.
+---------------------------------------------------------------------------------------------------
+Version: 0.6.0
+Date: 26. 06. 2026
+  Features:
+    - Rapid Rounds Mk2: 1.5x damage of standard, steel + copper recipe.
+      Piercing-magazine icon.
+    - Rapid Rounds AP: 2.5x damage + 1.2x range modifier. Requires
+      steel + copper + iron gear. Cannon-shell icon.
+    - Wide Shell: 1.8x splash radius, 0.7x damage. Uses a dedicated
+      projectile entity (td-mortar-wide-projectile) with scaled area
+      radius. Same compound cost as standard. Grenade icon.
+    - Heavy Shell: 2x damage, same radius as standard. Requires compound
+      + steel. Cannon-shell icon.
+    - Long-Range Round: same damage as standard sniper, 1.4x range
+      modifier (40 → 56 tiles). Steel x3 + copper recipe. Radar icon.
+    - Armor-Piercing Round: 2x damage + 1.2x range modifier. Requires
+      steel x3 + copper + iron gear. Cannon-shell icon.
+    - util.lua: three new helpers - scale_area_radius (modifies area
+      action radius recursively), set_projectile_name (rewires ammo to
+      a different projectile), set_range_modifier (sets
+      ammo_type.range_modifier handling single/array forms).
+---------------------------------------------------------------------------------------------------
+Version: 0.5.0
+Date: 26. 06. 2026
+  Features:
+    - Sniper Turret: very long range (40 tiles), slow-firing
+      (6x vanilla cooldown), very high per-shot damage. Green tint.
+      Completes the three-way tower triangle: Rapid for steady single
+      targets, Mortar for swarm clusters, Sniper for elite high-value
+      targets at distance.
+    - High-Caliber Rounds: ammo for the Sniper Turret. Cloned from
+      piercing-rounds-magazine with 5x damage scaling. Recipe:
+      steel-plate x2 + copper-plate x1 → 1 round. Dedicated ammo
+      category (td-sniper-round) keeps upgrades isolated.
+    - Sniper Turret damage research chain: 3 tiers (+30%/+40%/+50%).
+    - Sniper Turret fire rate research chain: 3 tiers (+15%/+20%/+25%).
+---------------------------------------------------------------------------------------------------
+Version: 0.4.0
+Date: 26. 06. 2026
+  Features:
+    - Mortar Turret damage research chain: 3 tiers (+25%/+25%/+40%),
+      requires automation + military + essence science packs. Icons
+      tinted orange to match the Mortar Turret colour scheme.
+    - Mortar Turret fire rate research chain: 3 tiers (+20%/+20%/+30%),
+      parallel to the damage chain.
+---------------------------------------------------------------------------------------------------
+Version: 0.3.0
+Date: 23. 06. 2026
+  Features:
+    - Swarm Biter enemy: faster and smaller than vanilla biters, low HP,
+      spawns in dense clusters. Introduced gradually from wave 3,
+      ramping to 70% of wave composition by wave 10.
+    - Mortar Turret: slow-firing area-damage tower countering swarm enemies.
+      Accepts only Mortar Shells.
+    - Explosive Compound: new intermediate material (iron + copper + coal)
+      required for Mortar Shell production.
+    - Mortar Shell: area-damage ammo for the Mortar Turret,
+      cloned from vanilla explosive-cannon-shell.
+    - Rapid Turret research chain: 3 tiers of damage upgrades
+      (+20%/+20%/+30%) and 3 tiers of attack speed upgrades
+      (+25%/+25%/+50%), each targeting only the Rapid Turret's
+      dedicated ammo category.
+    - Color scheme: Rapid Turret and ammo are cyan, Mortar Turret and
+      ammo are orange, Core is gold, Swarm Biters are purple. Applied to
+      entity graphics, inventory icons, and technology icons.
+    - ammo.lua: all ammo categories, intermediates, ammo items, and ammo
+      recipes extracted from towers.lua into their own file.
+    - research.lua: all technology definitions moved to a dedicated file.
+  Changes:
+    - Rapid Rounds now use a dedicated ammo category (td-rapid-bullet)
+      instead of vanilla's bullet category, preventing research upgrades
+      from bleeding into vanilla gun turrets.
+    - Rapid Turret recipe set to enabled=true so it's available from game
+      start without requiring the vanilla Military technology.
+    - Core spawn position is now offset relative to the player's actual
+      spawn point to avoid placing the 5x5 structure on top of the
+      crashed-ship wreckage.
+    - UI panel: Health bar removed, all stats shown as text only.
+    - Technology prototypes set explicit localised_name and
+      localised_description to bypass Factorio's trailing-number locale
+      stripping behavior.
+    - Versioning policy established: minor version increments for new
+      content, patch version for bug fixes and small changes.
+---------------------------------------------------------------------------------------------------
+Version: 0.2.0
+Date: 20. 06. 2026
+  Features:
+    - Core entity: 5x5 laser turret (gold tint), cloned from vanilla
+      laser-turret. Runs on a void energy source. With 2000 HP with 15%
+      physical resistance.
+    - Wave system: escalating waves of biters spawning in a ring around
+      the Core every 10 minutes. Wave size grows by 5 enemies per wave.
+    - Defeat condition: game ends when the Core is destroyed.
+    - Rapid Turret: fast-firing, low-damage ammo turret (cyan tint).
+      Twice the fire rate of a vanilla gun turret,
+      half the per-shot damage.
+    - Rapid Rounds: dedicated ammo for the Rapid Turret (iron + copper).
+    - HUD panel: left-side panel showing current wave, countdown to next
+      wave, and Core HP.
+    - Essence Science Pack registered as an accepted input in the vanilla
+      lab prototype.
+---------------------------------------------------------------------------------------------------
+Version: 0.1.0
+Date: 16. 06. 2026
+  Features:
+    - Initial mod structure: data.lua, control.lua, info.json, locale.
+    - Biter Essence: raw material dropped when enemy units are killed.
+      Drop amounts scale by enemy type (1 for small biters up to 16 for
+      behemoth worms).
+    - Essence Science Pack: tool-type item crafted from 5 Biter Essence.
+      Used as a research ingredient alongside standard science packs.
+    - Military and Military-2 technologies extended to require Essence
+      Science Packs.
+    - Floating "+N Essence" text rendered at kill location using
+      rendering.draw_text.
+    - util.lua: shared data-stage helpers (scale_damage, scale_graphics,
+      scale_energy, set_ammo_category, tint_graphics, tint_icon).
