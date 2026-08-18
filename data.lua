@@ -14,8 +14,11 @@ require("prototypes.turrets.sniper-turret")
 require("prototypes.turrets.shotgun-turret")
 
 require("prototypes.biters.swarm-biter")
+require("prototypes.biters.swarm-spitter")
 require("prototypes.biters.tank-biter")
+require("prototypes.biters.tank-spitter")
 require("prototypes.biters.boss-biter")
+require("prototypes.biters.nests")
 require("prototypes.biters.vanilla-biters")
 
 require("prototypes.technology.rapid-turret")

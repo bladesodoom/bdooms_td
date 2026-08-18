@@ -4,6 +4,7 @@ local core_manager        = require("scripts.core_manager")
 local wave_manager        = require("scripts.wave_manager")
 local ui_manager          = require("scripts.ui_manager")
 local boss_manager        = require("scripts.boss_manager")
+local nest_manager        = require("scripts.nest_manager")
 local projectile_visuals  = require("scripts.projectile_visuals")
 local essence_research    = require("scripts.essence_research")
 local resource_manager    = require("scripts.resource_manager")
@@ -21,8 +22,14 @@ local ESSENCE_AMOUNTS = {
     ["medium-worm-turret"]   = 4,
     ["big-worm-turret"]      = 8,
     ["behemoth-worm-turret"] = 16,
-    ["td-swarm-biter"]       = 1,
-    ["td-tank-biter"]        = 6,
+    ["td-swarm-biter"]        = 1,
+    ["td-swarm-spitter"]      = 1,
+    ["td-tank-biter"]         = 6,
+    ["td-tank-spitter"]       = 6,
+    ["td-swarm-nest"]         = 15,
+    ["td-swarm-spitter-nest"] = 15,
+    ["td-tank-nest"]          = 20,
+    ["td-tank-spitter-nest"]  = 20,
 }
 
 for name, amount in pairs(boss_manager.get_essence_amounts()) do
@@ -60,6 +67,7 @@ script.on_init(function()
     resource_manager.on_init()
     wave_manager.on_init()
     boss_manager.on_init()
+    nest_manager.on_init()
     essence_research.on_init()
 end)
 
@@ -69,12 +77,10 @@ script.on_configuration_changed(function()
         storage.wave_timer = 36000
     end
 
-    if storage.wave_warned == nil then storage.wave_warned = false end
-    if storage.next_wave_type == nil then storage.next_wave_type = nil end
-    if storage.next_wave_direction == nil then storage.next_wave_direction = nil end
     if storage.active_bosses == nil then storage.active_bosses = {} end
-    if storage.tank_announced == nil then storage.tank_announced = false end
     if storage.boss_wave_count == nil then storage.boss_wave_count = 0 end
+    if storage.seeded_nests == nil then storage.seeded_nests = {} end
+    if storage.nest_seed_timer == nil then storage.nest_seed_timer = 1800 end
 
     if storage.core and storage.core.valid and not storage.core_unit_number then
         storage.core_unit_number = storage.core.unit_number
@@ -112,6 +118,7 @@ script.on_nth_tick(60, function(event)
     wave_manager.on_tick(event)
     core_manager.on_aura_pulse()
     boss_manager.on_ability_tick()
+    nest_manager.on_tick()
     essence_research.on_tick()
     ui_manager.update()
 end)

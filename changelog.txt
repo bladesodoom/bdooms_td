@@ -1,4 +1,44 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.20.0
+Date: 17. 08. 2026
+  Features:
+    - Custom nests: four new unit-spawner entities, one biter and one
+      spitter variant per custom biter family - Swarm Nest, Swarm Spitter
+      Nest, Tank Nest, Tank Spitter Nest. Each nest's result_units spawns
+      only its own biter, dormant (zero spawn weight) below the same
+      evolution threshold already used for that family's ratio in wave
+      composition (0.3 for Swarm, 0.65 for Tank) and ramping to full weight
+      at that point - the same mechanism vanilla nests use to unlock
+      medium/big/behemoth biters as evolution rises. Not placed by vanilla
+      map generation; scripts/nest_manager.lua seeds them next to existing
+      vanilla nests near the Core over time, with the chance to appear
+      gated by the surface's live evolution factor.
+    - Swarm Spitter and Tank Spitter: ranged counterparts to the existing
+      Swarm Biter and Tank Biter, cloned from small-spitter/big-spitter
+      with matching tint, resistances, and attack tuning. Spawned by the
+      new Spitter Nests.
+    - scripts/nest_finder.lua: shared lookup of real enemy nests (vanilla
+      or custom) around the Core, used by both wave spawning and nest
+      seeding.
+  Changes:
+    - Wave spawning reworked to anchor on real map nests instead of a
+      fixed ring around the Core: each wave still picks one of the 8
+      compass directions, but now spawns next to the nearest actual enemy
+      nest in that direction (falling back to the old fixed-radius ring
+      only if none can be found, e.g. an unexplored area or a peaceful
+      surface). Rush waves keep their close-range identity by spawning
+      partway along the line from the Core toward the located nest. Siege
+      resolves a nest per direction. wave_manager.on_init now queues
+      background chunk generation in a radius around the Core so real
+      nests exist to search once waves start firing.
+    - Removed all wave-related chat announcements: wave direction and
+      composition, wave-type unlock messages, the Tank Biter unlock
+      notice, and the boss wave name/HP announcement. Removed the
+      5-second pre-spawn warning message and the pre-selection machinery
+      that supported it (storage.wave_warned, next_wave_type,
+      next_wave_direction). The UI panel's silent countdown is now the
+      only player-facing indicator that a wave is coming.
+---------------------------------------------------------------------------------------------------
 Version: 0.19.1
 Date: 08. 08. 2026
   Bugfixes:
