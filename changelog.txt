@@ -1,4 +1,15 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.21.0
+Date: 18. 08. 2026
+  Changes:
+    - Removed the Rapid, Mortar, Sniper, and Shotgun Turrets, their ammo
+      chains (Rapid Rounds, Mortar Shells, High-Caliber Rounds, Shotgun
+      Shells, and the Explosive Compound intermediate), their research
+      chains, and the material-gating system that locked their recipes -
+      all four turrets and everything built on top of them have moved to
+      the bdooms_gear mod instead. The Core, biters/spitters, nests,
+      bosses, waves, and Essence Research are unaffected and remain here.
+---------------------------------------------------------------------------------------------------
 Version: 0.20.0
 Date: 17. 08. 2026
   Features:
