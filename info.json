@@ -1,9 +1,9 @@
 {
-  "name": "td-overhaul",
+  "name": "bdooms_td",
   "version": "0.21.0",
-  "title": "Tower Defense Overhaul",
+  "title": "B'Dooms Tower Defense",
+  "description": "Turns Factorio into a tower defense game.",
   "author": "Bladesodoom",
   "factorio_version": "2.0",
-  "dependencies": ["base >= 2.0.0"],
-  "description": "Turns Factorio into a tower defense game: new towers, biters, ammo chains, and a biter-kill-driven research system."
+  "dependencies": ["base >= 2.0.0", "?space-age >= 2.0.0"]
 }
