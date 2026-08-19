@@ -1,8 +1,14 @@
 -- Nest Finder
 -- Shared lookup of real enemy nests (vanilla or custom - anything of type
--- "unit-spawner") around the Core. Used by wave_manager (to anchor wave
--- spawns to a real nest in the chosen direction) and nest_manager (to find
--- vanilla nests worth seeding a custom nest next to).
+-- "unit-spawner") around the Core. Used here by wave_manager, to anchor wave
+-- spawns to a real nest in the chosen direction.
+--
+-- This file is intentionally duplicated in bdooms_enemies (scripts/nest_finder.lua),
+-- where nest_manager uses it to find vanilla nests worth seeding a custom
+-- nest next to. It's pure/stateless (no storage access), and the two mods
+-- run in separate Lua states with no shared code loading, so each side that
+-- needs it keeps its own copy rather than reaching across the mod boundary
+-- for a plain geometry helper.
 
 local NestFinder = {}
 

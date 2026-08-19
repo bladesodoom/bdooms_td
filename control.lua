@@ -3,12 +3,14 @@
 local core_manager        = require("scripts.core_manager")
 local wave_manager        = require("scripts.wave_manager")
 local ui_manager          = require("scripts.ui_manager")
-local boss_manager        = require("scripts.boss_manager")
-local nest_manager        = require("scripts.nest_manager")
 local projectile_visuals  = require("scripts.projectile_visuals")
 local essence_research    = require("scripts.essence_research")
 local resource_manager    = require("scripts.resource_manager")
 
+-- Vanilla drop amounts. Custom biters, bosses, and nests are defined in
+-- bdooms_enemies (a separate mod with its own isolated storage) and merged
+-- in below through its "bdooms_enemies" remote interface, rather than
+-- listed here by hand.
 local ESSENCE_AMOUNTS = {
     ["small-biter"]          = 1,
     ["medium-biter"]         = 2,
@@ -22,18 +24,14 @@ local ESSENCE_AMOUNTS = {
     ["medium-worm-turret"]   = 4,
     ["big-worm-turret"]      = 8,
     ["behemoth-worm-turret"] = 16,
-    ["td-swarm-biter"]        = 1,
-    ["td-swarm-spitter"]      = 1,
-    ["td-tank-biter"]         = 6,
-    ["td-tank-spitter"]       = 6,
-    ["td-swarm-nest"]         = 15,
-    ["td-swarm-spitter-nest"] = 15,
-    ["td-tank-nest"]          = 20,
-    ["td-tank-spitter-nest"]  = 20,
 }
 
-for name, amount in pairs(boss_manager.get_essence_amounts()) do
-    ESSENCE_AMOUNTS[name] = amount
+if remote.interfaces["bdooms_enemies"] then
+    for name, amount in pairs(remote.call("bdooms_enemies", "get_essence_amounts")) do
+        ESSENCE_AMOUNTS[name] = amount
+    end
+else
+    log("[TD Overhaul] bdooms_enemies remote interface not found - custom biter/boss/nest essence amounts unavailable.")
 end
 
 local function get_essence_amount(entity_name)
@@ -66,8 +64,6 @@ script.on_init(function()
     core_manager.on_init()
     resource_manager.on_init()
     wave_manager.on_init()
-    boss_manager.on_init()
-    nest_manager.on_init()
     essence_research.on_init()
 end)
 
@@ -77,13 +73,17 @@ script.on_configuration_changed(function()
         storage.wave_timer = 36000
     end
 
-    if storage.active_bosses == nil then storage.active_bosses = {} end
     if storage.boss_wave_count == nil then storage.boss_wave_count = 0 end
-    if storage.seeded_nests == nil then storage.seeded_nests = {} end
-    if storage.nest_seed_timer == nil then storage.nest_seed_timer = 1800 end
 
     if storage.core and storage.core.valid and not storage.core_unit_number then
         storage.core_unit_number = storage.core.unit_number
+    end
+
+    -- bdooms_enemies has its own isolated storage - re-push the Core
+    -- reference in case this mod was just added to an existing save (its
+    -- own on_init won't have run to receive core_manager's original push).
+    if storage.core and storage.core.valid then
+        remote.call("bdooms_enemies", "set_core", storage.core)
     end
 
     essence_research.on_configuration_changed()
@@ -117,8 +117,6 @@ end)
 script.on_nth_tick(60, function(event)
     wave_manager.on_tick(event)
     core_manager.on_aura_pulse()
-    boss_manager.on_ability_tick()
-    nest_manager.on_tick()
     essence_research.on_tick()
     ui_manager.update()
 end)

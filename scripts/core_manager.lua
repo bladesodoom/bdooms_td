@@ -36,6 +36,12 @@ function CoreManager.on_init()
         -- wave_manager targeting it directly.
         storage.core = core
         storage.core_unit_number = core.unit_number
+
+        -- bdooms_enemies has its own isolated storage and needs its own
+        -- copy of the Core reference for nest seeding and boss abilities
+        -- (e.g. the Swarm Lord's spawn-and-attack pulse) to target.
+        remote.call("bdooms_enemies", "set_core", core)
+
         game.print("[TD Overhaul] The Core has been established. Defend it!")
     else
         -- create_entity returns nil if the position is blocked/invalid - this

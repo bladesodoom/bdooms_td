@@ -43,8 +43,6 @@ local SPAWN_RADIUS      = 250
 local RUSH_SPAWN_RADIUS = 120
 local ORIGIN_JITTER     = 6 -- tiles of scatter applied around a spawn origin
 
-local boss_manager      = require("scripts.boss_manager")
-
 -- 8 compass directions. Angles use Factorio's coordinate system:
 -- x increases East, y increases South, so North = -π/2, South = +π/2.
 local DIRECTIONS        = {
@@ -244,36 +242,25 @@ local function spawn_swarm_surge(surface, origin, wave_size)
     end
 end
 
+-- Boss types themselves (prototypes, ability logic, essence amounts) live in
+-- bdooms_enemies, a separate mod with its own isolated storage - picking a
+-- type, spawning it, and registering it for ability ticking all happen on
+-- that side of the "bdooms_enemies" remote interface. This function only
+-- decides *when* a boss wave happens and how tough it is (both wave-cadence
+-- concerns owned here).
 local function spawn_boss(surface, origin)
-    local boss_type = boss_manager.pick_type(get_evo(surface))
-    if not boss_type then return end
-
     storage.boss_wave_count = (storage.boss_wave_count or 0) + 1
 
     local base_hp = settings.global["td-boss-base-health"].value
     local growth  = settings.global["td-boss-health-growth"].value
     local hp      = base_hp + (storage.boss_wave_count - 1) * growth
 
-    local pos = surface.find_non_colliding_position(boss_type.entity_name, {
+    local position = {
         x = origin.x + (math.random() - 0.5) * 2 * ORIGIN_JITTER,
         y = origin.y + (math.random() - 0.5) * 2 * ORIGIN_JITTER,
-    }, 32, 1)
-
-    if not pos then return end
-
-    local boss = surface.create_entity {
-        name     = boss_type.entity_name,
-        position = pos,
-        force    = "enemy",
     }
-    if boss then
-        boss.health = math.min(hp, boss.max_health)
-        boss.commandable.set_command {
-            type   = defines.command.attack,
-            target = storage.core,
-        }
-        boss_manager.register(boss)
-    end
+
+    remote.call("bdooms_enemies", "spawn_boss", surface, position, storage.core, hp)
 end
 
 -- ===== Public API =====

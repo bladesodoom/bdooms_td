@@ -1,5 +1,10 @@
 -- Data-stage helpers for tweaking cloned vanilla prototypes.
 -- require() this from any prototypes/*.lua file that needs it.
+--
+-- This file is intentionally duplicated in bdooms_enemies (prototypes/utility/util.lua) -
+-- data-stage code has no cross-mod require path that wouldn't invert the
+-- dependency direction (bdooms_td depends on bdooms_enemies, not the other
+-- way around), so each mod that needs these helpers keeps its own copy.
 
 local Util = {}
 

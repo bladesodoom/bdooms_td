@@ -1,4 +1,19 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.22.0
+Date: 19. 08. 2026
+  Changes:
+    - Moved the custom biters (Swarm/Tank Biter and Spitter), bosses (Swarm
+      Lord, Hive Lord), and custom nests (Hive Nest, Swarm/Tank Nest and
+      Spitter Nest variants) to a new dependency, bdooms_enemies, along with
+      their supporting scripts (boss_manager.lua, scripts/bosses/,
+      nest_manager.lua) and settings (Boss Max Health Cap, Tank Biter Max
+      Health, Boss Swarm Clusters per Pulse). Behavior is unchanged - wave
+      spawning, boss cadence/health scaling, and essence drops still work
+      exactly as before, now coordinated across the mod boundary through
+      bdooms_enemies' "bdooms_enemies" remote interface (Factorio gives
+      every mod its own isolated storage table, so the two mods can't share
+      state directly). The Core, waves, and Essence Research remain here.
+---------------------------------------------------------------------------------------------------
 Version: 0.21.0
 Date: 18. 08. 2026
   Changes:
