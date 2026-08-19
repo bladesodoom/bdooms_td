@@ -5,5 +5,5 @@
   "description": "Turns Factorio into a tower defense game.",
   "author": "Bladesodoom",
   "factorio_version": "2.0",
-  "dependencies": ["base >= 2.0.0", "bdooms_enemies >= 0.1.0", "?space-age >= 2.0.0"]
+  "dependencies": ["base >= 2.0.0", "?space-age >= 2.0.0", "?bdooms_enemies >= 0.1.0", "?bdooms_turrets >= 0.3.0"]
 }
