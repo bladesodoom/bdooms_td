@@ -27,8 +27,13 @@ local ESSENCE_AMOUNTS = {
     ["behemoth-worm-turret"] = 16,
 }
 
-for name, amount in pairs(mod_compat.call("bdooms_enemies", "get_essence_amounts") or {}) do
-    ESSENCE_AMOUNTS[name] = amount
+-- remote.call is only valid inside an event, so the bdooms_enemies merge
+-- can't happen here at module load time - it's done in on_init and
+-- on_configuration_changed instead (see merge_essence_amounts below).
+local function merge_essence_amounts()
+    for name, amount in pairs(mod_compat.call("bdooms_enemies", "get_essence_amounts") or {}) do
+        ESSENCE_AMOUNTS[name] = amount
+    end
 end
 
 local function get_essence_amount(entity_name)
@@ -59,6 +64,7 @@ end
 
 script.on_init(function()
     mod_compat.log_detected()
+    merge_essence_amounts()
     core_manager.on_init()
     resource_manager.on_init()
     wave_manager.on_init()
@@ -67,6 +73,7 @@ end)
 
 script.on_configuration_changed(function()
     mod_compat.log_detected()
+    merge_essence_amounts()
 
     if storage.wave == nil then storage.wave = 0 end
     if storage.wave_timer == nil then
