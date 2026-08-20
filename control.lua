@@ -6,6 +6,7 @@ local ui_manager          = require("scripts.ui_manager")
 local projectile_visuals  = require("scripts.projectile_visuals")
 local essence_research    = require("scripts.essence_research")
 local resource_manager    = require("scripts.resource_manager")
+local mod_compat          = require("scripts.mod_compat")
 
 -- Vanilla drop amounts. Custom biters, bosses, and nests are defined in
 -- bdooms_enemies (a separate mod with its own isolated storage) and merged
@@ -26,12 +27,8 @@ local ESSENCE_AMOUNTS = {
     ["behemoth-worm-turret"] = 16,
 }
 
-if remote.interfaces["bdooms_enemies"] then
-    for name, amount in pairs(remote.call("bdooms_enemies", "get_essence_amounts")) do
-        ESSENCE_AMOUNTS[name] = amount
-    end
-else
-    log("[TD Overhaul] bdooms_enemies remote interface not found - custom biter/boss/nest essence amounts unavailable.")
+for name, amount in pairs(mod_compat.call("bdooms_enemies", "get_essence_amounts") or {}) do
+    ESSENCE_AMOUNTS[name] = amount
 end
 
 local function get_essence_amount(entity_name)
@@ -61,6 +58,7 @@ end
 -- ===== Event wiring =====
 
 script.on_init(function()
+    mod_compat.log_detected()
     core_manager.on_init()
     resource_manager.on_init()
     wave_manager.on_init()
@@ -68,6 +66,8 @@ script.on_init(function()
 end)
 
 script.on_configuration_changed(function()
+    mod_compat.log_detected()
+
     if storage.wave == nil then storage.wave = 0 end
     if storage.wave_timer == nil then
         storage.wave_timer = 36000
@@ -83,7 +83,7 @@ script.on_configuration_changed(function()
     -- reference in case this mod was just added to an existing save (its
     -- own on_init won't have run to receive core_manager's original push).
     if storage.core and storage.core.valid then
-        remote.call("bdooms_enemies", "set_core", storage.core)
+        mod_compat.call("bdooms_enemies", "set_core", storage.core)
     end
 
     essence_research.on_configuration_changed()

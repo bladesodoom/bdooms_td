@@ -14,6 +14,7 @@ local WaveManager = {}
 
 local essence_research = require("scripts.essence_research")
 local nest_finder       = require("scripts.nest_finder")
+local mod_compat        = require("scripts.mod_compat")
 
 local function cfg()
     local interval_bonus = essence_research.get_bonus("wave-interval")
@@ -247,7 +248,8 @@ end
 -- type, spawning it, and registering it for ability ticking all happen on
 -- that side of the "bdooms_enemies" remote interface. This function only
 -- decides *when* a boss wave happens and how tough it is (both wave-cadence
--- concerns owned here).
+-- concerns owned here). Falls back to a behemoth biter if bdooms_enemies
+-- isn't installed, so a boss wave still spawns something.
 local function spawn_boss(surface, origin)
     storage.boss_wave_count = (storage.boss_wave_count or 0) + 1
 
@@ -260,7 +262,10 @@ local function spawn_boss(surface, origin)
         y = origin.y + (math.random() - 0.5) * 2 * ORIGIN_JITTER,
     }
 
-    remote.call("bdooms_enemies", "spawn_boss", surface, position, storage.core, hp)
+    local boss = mod_compat.call("bdooms_enemies", "spawn_boss", surface, position, storage.core, hp)
+    if not boss then
+        spawn_at(surface, origin, "behemoth-biter")
+    end
 end
 
 -- ===== Public API =====

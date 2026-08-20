@@ -1,4 +1,24 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.23.0
+Date: 19. 08. 2026
+  Changes:
+    - Generalized cross-mod integration into shared/mod_integrations.lua (a
+      registry of known B'Dooms mods by category - enemies, turrets,
+      weapons, armor, equipment), plus scripts/mod_compat.lua and
+      prototypes/utility/mod_compat.lua to detect which of them are
+      installed and enabled and call into their remote interfaces safely
+      at the control and data stages respectively. The existing
+      bdooms_enemies integration (essence amounts, Core reference, boss
+      spawning) now goes through this instead of hand-rolled remote.call
+      checks. Fixes a latent bug where core_manager.lua called
+      remote.call("bdooms_enemies", "set_core", ...) unconditionally,
+      which would have errored on Core spawn if bdooms_enemies weren't
+      installed despite being an optional dependency; boss waves now fall
+      back to a behemoth biter in that case instead of spawning nothing.
+      No specific new mods are wired up yet - this is infrastructure so
+      future turret/weapon/armor/equipment support from sibling mods can
+      be added with a registry entry and a mod_compat.call site.
+---------------------------------------------------------------------------------------------------
 Version: 0.22.0
 Date: 19. 08. 2026
   Changes:

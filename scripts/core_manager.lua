@@ -4,6 +4,8 @@
 
 local CoreManager = {}
 
+local mod_compat = require("scripts.mod_compat")
+
 local CORE_NAME = "td-core"
 -- Offset from the player's actual spawn point, not an absolute world
 -- coordinate
@@ -39,8 +41,9 @@ function CoreManager.on_init()
 
         -- bdooms_enemies has its own isolated storage and needs its own
         -- copy of the Core reference for nest seeding and boss abilities
-        -- (e.g. the Swarm Lord's spawn-and-attack pulse) to target.
-        remote.call("bdooms_enemies", "set_core", core)
+        -- (e.g. the Swarm Lord's spawn-and-attack pulse) to target. No-op
+        -- if bdooms_enemies isn't installed - it's an optional dependency.
+        mod_compat.call("bdooms_enemies", "set_core", core)
 
         game.print("[TD Overhaul] The Core has been established. Defend it!")
     else
