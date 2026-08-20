@@ -1,9 +1,9 @@
 {
   "name": "bdooms_td",
-  "version": "0.23.0",
+  "version": "0.23.1",
   "title": "B'Dooms Tower Defense",
   "description": "Turns Factorio into a tower defense game.",
   "author": "Bladesodoom",
   "factorio_version": "2.0",
-  "dependencies": ["base >= 2.0.0", "?space-age >= 2.0.0", "bdooms_enemies >= 0.3.0", "bdooms_turrets >= 0.4.0", "bdooms_gear >= 0.4.0"]
+  "dependencies": ["base >= 2.0.0", "?space-age >= 2.0.0", "bdooms_enemies >= 0.3.1", "bdooms_turrets >= 0.4.1", "bdooms_gear >= 0.4.1"]
 }
